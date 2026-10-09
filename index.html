@@ -20,7 +20,7 @@
       </div>
       <h1 class="text-2xl font-bold text-slate-900 mb-2">Auto-évaluation Managériale</h1>
       <p class="text-sm text-slate-600 mb-6 leading-relaxed">
-        Ce questionnaire explore vos pratiques professionnelles sur 4 dimensions : <strong>Communication, Gestion d'équipe, Adaptation et Leadership</strong>. Vos réponses permettront de dresser votre profil managérial et de nourrir les ateliers collectifs.
+        Ce questionnaire explore vos pratiques managériales du quotidien à travers 4 dimensions : <strong>Communication, Gestion d'équipe, Adaptation et Leadership</strong>. Vos réponses permettront d'établir votre profil individuel et de nourrir les temps de formation collective.
       </p>
 
       <form id="user-form" onsubmit="startQuiz(event)" class="space-y-4">
@@ -38,7 +38,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Fonction *</label>
-            <input type="text" id="user-fonction" required class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Ex. Responsable de service">
+            <input type="text" id="user-fonction" required class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Ex. Chef de service">
           </div>
           <div>
             <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Email *</label>
@@ -82,30 +82,25 @@
       </div>
     </div>
 
-    <!-- ÉCRAN 3 : CONFIRMATION PROPRE -->
+    <!-- ÉCRAN 3 : CONFIRMATION FINALE -->
     <div id="step-success" class="hidden text-center py-8">
       <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl font-bold">✓</div>
       <h2 class="text-2xl font-bold text-slate-900 mb-2">Réponses enregistrées avec succès</h2>
       <p class="text-sm text-slate-600 max-w-md mx-auto leading-relaxed mb-6">
-        Votre questionnaire a bien été pris en compte. Vos résultats sont désormais intégrés à la base d'analyse pour votre restitution.
+        Votre profil a été mis à jour et vos résultats ont été intégrés à la base. Ils serviront à alimenter votre radar individuel et le travail collectif lors de la formation.
       </p>
       <div class="inline-block px-4 py-2 bg-slate-100 text-slate-600 text-xs font-semibold rounded-lg">
-        Vous pouvez fermer cet onglet en toute sécurité.
+        Vous pouvez fermer cette fenêtre.
       </div>
     </div>
 
-    <!-- ZONE MESSAGE ERREUR ÉLÉGANTE -->
+    <!-- ZONE MESSAGE ERREUR -->
     <div id="error-box" class="hidden mt-4 p-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl"></div>
 
   </div>
 
   <script>
-    // === PARAMÈTRES GRIST ===
-    const GRIST_DOC_ID = "bMbHaYK5mnfQYevD3amhBP"; 
-    const GRIST_API_KEY = "bMbHaYK5mnfQ";
-    const GRIST_SERVER = "https://docs.getgrist.com";
-
-    // Échelle à 4 niveaux (sans réponse neutre)
+    // Échelle à 4 niveaux (sans position neutre pour forcer le choix)
     const ECHELLE = [
       "1 - Pas d'accord",
       "2 - Plutôt pas d'accord",
@@ -137,17 +132,13 @@
     ];
 
     let currentUserId = null;
+    let userData = {};
     let currentIndex = 0;
     let userAnswers = {};
-    let isInsideGrist = false;
 
-    // Détection si on est dans Grist en mode Widget
     try {
       grist.ready({ requiredAccess: 'full' });
-      isInsideGrist = (window.parent !== window);
-    } catch(e) {
-      isInsideGrist = false;
-    }
+    } catch(e) {}
 
     function showError(msg) {
       const box = document.getElementById('error-box');
@@ -155,14 +146,11 @@
       box.classList.remove('hidden');
     }
 
-async function startQuiz(e) {
+    async function startQuiz(e) {
       e.preventDefault();
       document.getElementById('error-box').classList.add('hidden');
-      const startBtn = document.getElementById('btn-start');
-      startBtn.disabled = true;
-      startBtn.innerText = "Création du profil...";
 
-      const fields = {
+      userData = {
         Nom: document.getElementById('user-nom').value.trim(),
         Prénom: document.getElementById('user-prenom').value.trim(),
         Fonction: document.getElementById('user-fonction').value.trim(),
@@ -170,38 +158,19 @@ async function startQuiz(e) {
         Date_Inscription: new Date().toISOString().split('T')[0]
       };
 
+      // Si le widget est dans Grist, on crée l'utilisateur tout de suite
       try {
-        if (isInsideGrist) {
-          // Exécution directe et native dans Grist
-          const res = await grist.docApi.applyUserActions([['AddRecord', 'Utilisateurs', null, fields]]);
-          // Récupère l'ID généré (entier direct ou premier élément d'un tableau)
+        if (window.grist && grist.docApi) {
+          const res = await grist.docApi.applyUserActions([['AddRecord', 'Utilisateurs', null, userData]]);
           currentUserId = Array.isArray(res) ? (res[0]?.id || res[0]) : (res?.id || res);
-        } else {
-          // Exécution autonome via le lien public web
-          const res = await fetch(`${GRIST_SERVER}/api/docs/${GRIST_DOC_ID}/tables/Utilisateurs/records`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${GRIST_API_KEY}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ records: [{ fields: fields }] })
-          });
-          if (!res.ok) throw new Error("Erreur HTTP " + res.status);
-          const data = await res.json();
-          currentUserId = data.records[0].id;
         }
-
-        if (!currentUserId) throw new Error("Identifiant utilisateur manquant");
-
-        document.getElementById('step-intro').classList.add('hidden');
-        document.getElementById('step-quiz').classList.remove('hidden');
-        renderQuestion();
       } catch (err) {
-        console.error("Erreur création utilisateur :", err);
-        showError("Impossible de créer la fiche utilisateur. Vérifie l'accès complet dans Grist ou la clé API.");
-        startBtn.disabled = false;
-        startBtn.innerText = "Commencer le questionnaire →";
+        console.warn("Création différée pour l'envoi final :", err);
       }
+
+      document.getElementById('step-intro').classList.add('hidden');
+      document.getElementById('step-quiz').classList.remove('hidden');
+      renderQuestion();
     }
 
     function renderQuestion() {
@@ -261,7 +230,14 @@ async function startQuiz(e) {
       const dateISO = new Date().toISOString();
 
       try {
-        if (isInsideGrist) {
+        if (window.grist && grist.docApi) {
+          // Si l'utilisateur n'avait pas encore son identifiant Grist
+          if (!currentUserId) {
+            const res = await grist.docApi.applyUserActions([['AddRecord', 'Utilisateurs', null, userData]]);
+            currentUserId = Array.isArray(res) ? (res[0]?.id || res[0]) : (res?.id || res);
+          }
+
+          // Enregistrement des 20 réponses d'un seul coup
           const actions = QUESTIONS.map(q => ['AddRecord', 'Reponses', null, {
             Utilisateur_ID: currentUserId,
             Question_ID: q.id,
@@ -269,30 +245,13 @@ async function startQuiz(e) {
             Date_Réponse: dateISO
           }]);
           await grist.docApi.applyUserActions(actions);
-        } else {
-          const recordsToInsert = QUESTIONS.map(q => ({
-            fields: {
-              Utilisateur_ID: currentUserId,
-              Question_ID: q.id,
-              Note: userAnswers[q.id],
-              Date_Réponse: dateISO
-            }
-          }));
-
-          await fetch(`${GRIST_SERVER}/api/docs/${GRIST_DOC_ID}/tables/Reponses/records`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${GRIST_API_KEY}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ records: recordsToInsert })
-          });
         }
 
         document.getElementById('step-quiz').classList.add('hidden');
         document.getElementById('step-success').classList.remove('hidden');
       } catch (err) {
-        showError("Une erreur est survenue lors de l'enregistrement de vos réponses. Veuillez réessayer.");
+        console.error(err);
+        showError("Erreur d'écriture. Assurez-vous d'avoir accordé l'« Accès complet » au widget dans Grist.");
         btn.disabled = false;
         btn.innerText = 'Réessayer';
       }
