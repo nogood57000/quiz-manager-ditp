@@ -155,7 +155,7 @@
       box.classList.remove('hidden');
     }
 
-    async function startQuiz(e) {
+async function startQuiz(e) {
       e.preventDefault();
       document.getElementById('error-box').classList.add('hidden');
       const startBtn = document.getElementById('btn-start');
@@ -172,9 +172,12 @@
 
       try {
         if (isInsideGrist) {
-          const ids = await grist.docApi.applyUserActions([['AddRecord', 'Utilisateurs', null, fields]]);
-          currentUserId = ids[0];
+          // Exécution directe et native dans Grist
+          const res = await grist.docApi.applyUserActions([['AddRecord', 'Utilisateurs', null, fields]]);
+          // Récupère l'ID généré (entier direct ou premier élément d'un tableau)
+          currentUserId = Array.isArray(res) ? (res[0]?.id || res[0]) : (res?.id || res);
         } else {
+          // Exécution autonome via le lien public web
           const res = await fetch(`${GRIST_SERVER}/api/docs/${GRIST_DOC_ID}/tables/Utilisateurs/records`, {
             method: 'POST',
             headers: {
@@ -183,15 +186,19 @@
             },
             body: JSON.stringify({ records: [{ fields: fields }] })
           });
+          if (!res.ok) throw new Error("Erreur HTTP " + res.status);
           const data = await res.json();
           currentUserId = data.records[0].id;
         }
+
+        if (!currentUserId) throw new Error("Identifiant utilisateur manquant");
 
         document.getElementById('step-intro').classList.add('hidden');
         document.getElementById('step-quiz').classList.remove('hidden');
         renderQuestion();
       } catch (err) {
-        showError("Impossible de créer la fiche utilisateur. Vérifiez la clé API ou les permissions.");
+        console.error("Erreur création utilisateur :", err);
+        showError("Impossible de créer la fiche utilisateur. Vérifie l'accès complet dans Grist ou la clé API.");
         startBtn.disabled = false;
         startBtn.innerText = "Commencer le questionnaire →";
       }
