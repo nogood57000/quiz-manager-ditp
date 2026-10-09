@@ -65,16 +65,22 @@
       }
     });
 
-    // Chargement de la liste des questions depuis la table Questions
+  // Chargement de la liste des questions depuis Grist
     grist.docApi.fetchTable('Questions').then(records => {
+      const colTexte = records.Texte || records.texte;
+      const colCat = records.Catégorie || records.Categorie || records.categorie;
+      
       questions = records.id.map((id, index) => ({
         id: id,
-        texte: records.Texte[index],
-        categorie: records.Catégorie[index]
+        texte: colTexte ? colTexte[index] : "Question " + id,
+        categorie: colCat ? colCat[index] : "Management"
       }));
+      currentIndex = 0;
       renderQuestion();
     }).catch(err => {
-      console.warn("Mode autonome (hors table Grist) :", err);
+      console.error("Erreur de chargement Grist :", err);
+    });
+    
       // Fallback de démonstration si ouvert hors Grist
       questions = [
         { id: 1, texte: "J’adapte la composition de mon équipe en fonction des objectifs.", categorie: "Gestion d'équipe" },
