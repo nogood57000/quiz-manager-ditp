@@ -142,7 +142,7 @@
       box.classList.remove('hidden');
     }
 
-    async function startQuiz(e) {
+async function startQuiz(e) {
       e.preventDefault();
       document.getElementById('error-box').classList.add('hidden');
       const startBtn = document.getElementById('btn-start');
@@ -155,18 +155,30 @@
       const email = document.getElementById('user-email').value.trim();
       const dateNow = new Date().toISOString().split('T')[0];
 
+      // Données complètes
+      const fullFields = {
+        Nom: `${nom} ${prenom}`.trim(),
+        Prenom: prenom,
+        Prénom: prenom,
+        Fonction: fonction,
+        Email: email,
+        Date_Inscription: dateNow
+      };
+
       try {
-        // Envoi avec prise en compte des variantes de casse
-        const res = await grist.docApi.applyUserActions([
-          ['AddRecord', 'Utilisateurs', null, {
-            Nom: nom,
-            Prenom: prenom,
-            Prénom: prenom,
-            Fonction: fonction,
+        let res;
+        try {
+          // Tentative complète
+          res = await grist.docApi.applyUserActions([['AddRecord', 'Utilisateurs', null, fullFields]]);
+        } catch (subErr) {
+          console.warn("Échec avec colonnes masquées, repli sur colonnes visibles :", subErr);
+          // Repli sur Nom + Email (qui sont toujours visibles)
+          res = await grist.docApi.applyUserActions([['AddRecord', 'Utilisateurs', null, {
+            Nom: `${nom} ${prenom}`.trim(),
             Email: email,
             Date_Inscription: dateNow
-          }]
-        ]);
+          }]]);
+        }
 
         if (Array.isArray(res) && res.length > 0) {
           currentUserId = typeof res[0] === 'object' ? res[0].id : res[0];
@@ -181,7 +193,7 @@
         renderQuestion();
       } catch (err) {
         console.error("Détail de l'erreur :", err);
-        showError("Impossible d'enregistrer l'utilisateur. Vérifiez que toutes les colonnes sont cochées dans 'Colonnes visibles'.");
+        showError("Impossible de créer la fiche utilisateur. Cochez 'Prénom' et 'Fonction' dans les colonnes visibles à droite.");
         startBtn.disabled = false;
         startBtn.innerText = "Commencer le questionnaire →";
       }
