@@ -1,1 +1,170 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Auto-évaluation Manager</title>
+  <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-2xl bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
+    
+    <!-- En-tête -->
+    <div class="mb-6">
+      <div class="flex justify-between items-center text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+        <span id="dimension-tag">Dimension</span>
+        <span id="step-counter">Question 1 / 20</span>
+      </div>
+      <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+        <div id="progress-bar" class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 5%"></div>
+      </div>
+    </div>
 
+    <!-- Question -->
+    <div id="quiz-card" class="min-h-[140px] flex items-center mb-6">
+      <h2 id="question-text" class="text-xl font-medium text-slate-800 leading-snug">Chargement des questions...</h2>
+    </div>
+
+    <!-- Choix Likert -->
+    <div id="options-container" class="grid grid-cols-1 gap-2.5 mb-6"></div>
+
+    <!-- Navigation -->
+    <div class="flex justify-between items-center pt-4 border-t border-slate-100">
+      <button id="prev-btn" onclick="prevQuestion()" class="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none">
+        ← Précédent
+      </button>
+      <button id="next-btn" onclick="nextQuestion()" disabled class="px-5 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-40 disabled:pointer-events-none shadow-sm transition">
+        Suivant →
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    const ECHELLE = [
+      "1 - Pas du tout d'accord",
+      "2 - Plutôt pas d'accord",
+      "3 - Neutre",
+      "4 - Plutôt d'accord",
+      "5 - Tout à fait d'accord"
+    ];
+
+    let questions = [];
+    let currentIndex = 0;
+    let answers = {};
+    let currentUserId = null;
+
+    // Connexion à Grist
+    grist.ready({ requiredAccess: 'full' });
+
+    // Récupération de l'utilisateur actif sélectionné dans Grist
+    grist.onRecord((record, mappings) => {
+      if (record && record.id) {
+        currentUserId = record.id;
+      }
+    });
+
+    // Chargement de la liste des questions depuis la table Questions
+    grist.docApi.fetchTable('Questions').then(records => {
+      questions = records.id.map((id, index) => ({
+        id: id,
+        texte: records.Texte[index],
+        categorie: records.Catégorie[index]
+      }));
+      renderQuestion();
+    }).catch(err => {
+      console.warn("Mode autonome (hors table Grist) :", err);
+      // Fallback de démonstration si ouvert hors Grist
+      questions = [
+        { id: 1, texte: "J’adapte la composition de mon équipe en fonction des objectifs.", categorie: "Gestion d'équipe" },
+        { id: 2, texte: "Je résous les conflits au sein de mon équipe de manière efficace.", categorie: "Gestion d'équipe" }
+      ];
+      renderQuestion();
+    });
+
+    function renderQuestion() {
+      if (!questions.length) return;
+      const q = questions[currentIndex];
+      
+      document.getElementById('dimension-tag').innerText = q.categorie || 'Management';
+      document.getElementById('step-counter').innerText = `Question ${currentIndex + 1} / ${questions.length}`;
+      document.getElementById('progress-bar').style.width = `${((currentIndex + 1) / questions.length) * 100}%`;
+      document.getElementById('question-text').innerText = q.texte;
+
+      const container = document.getElementById('options-container');
+      container.innerHTML = '';
+
+      ECHELLE.forEach(option => {
+        const isSelected = answers[q.id] === option;
+        const btn = document.createElement('button');
+        btn.className = `w-full text-left p-3.5 rounded-xl border text-sm font-medium transition-all ${
+          isSelected 
+            ? 'border-indigo-600 bg-indigo-50/60 text-indigo-900 ring-2 ring-indigo-500/20' 
+            : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+        }`;
+        btn.innerText = option;
+        btn.onclick = () => selectOption(q.id, option);
+        container.appendChild(btn);
+      });
+
+      document.getElementById('prev-btn').disabled = (currentIndex === 0);
+      document.getElementById('next-btn').disabled = !answers[q.id];
+      document.getElementById('next-btn').innerText = (currentIndex === questions.length - 1) ? 'Terminer et Enregistrer' : 'Suivant →';
+    }
+
+    function selectOption(questionId, value) {
+      answers[questionId] = value;
+      renderQuestion();
+    }
+
+    function prevQuestion() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        renderQuestion();
+      }
+    }
+
+    async function nextQuestion() {
+      if (currentIndex < questions.length - 1) {
+        currentIndex++;
+        renderQuestion();
+      } else {
+        await saveAnswers();
+      }
+    }
+
+    async function saveAnswers() {
+      const btn = document.getElementById('next-btn');
+      btn.disabled = true;
+      btn.innerText = 'Enregistrement...';
+
+      const rowsToAdd = Object.entries(answers).map(([qId, val]) => ({
+        Utilisateur_ID: currentUserId,
+        Question_ID: parseInt(qId),
+        Note: val,
+        Date_Réponse: new Date().toISOString()
+      }));
+
+      try {
+        await grist.docApi.applyUserActions([
+          ['AddRecords', 'Réponses', null, {
+            Utilisateur_ID: rowsToAdd.map(r => r.Utilisateur_ID),
+            Question_ID: rowsToAdd.map(r => r.Question_ID),
+            Note: rowsToAdd.map(r => r.Note),
+            Date_Réponse: rowsToAdd.map(r => r.Date_Réponse)
+          }]
+        ]);
+        document.getElementById('quiz-card').innerHTML = '<div class="text-center w-full"><h2 class="text-2xl font-semibold text-emerald-600">Quiz validé !</h2><p class="text-sm text-slate-500 mt-2">Tes réponses ont été transmises à la base.</p></div>';
+        document.getElementById('options-container').innerHTML = '';
+        document.getElementById('prev-btn').style.display = 'none';
+        btn.style.display = 'none';
+      } catch (err) {
+        console.error(err);
+        alert("Erreur lors de l'enregistrement dans Grist. Vérifie les permissions.");
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
