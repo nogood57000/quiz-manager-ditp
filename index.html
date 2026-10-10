@@ -134,9 +134,7 @@
     let currentIndex = 0;
     let userAnswers = {};
 
-    try {
-      grist.ready({ requiredAccess: 'full' });
-    } catch(e) {}
+    grist.ready({ requiredAccess: 'full' });
 
     function showError(msg) {
       const box = document.getElementById('error-box');
@@ -144,11 +142,9 @@
       box.classList.remove('hidden');
     }
 
-    // Bascule immédiate sans toucher à Grist
     function demarrerQuiz() {
       const nom = document.getElementById('user-nom').value.trim();
       const prenom = document.getElementById('user-prenom').value.trim();
-      const fonction = document.getElementById('user-fonction').value.trim();
       const email = document.getElementById('user-email').value.trim();
 
       if (!nom) {
@@ -159,9 +155,9 @@
       document.getElementById('error-box').classList.add('hidden');
 
       managerInfos = {
-        Nom: (nom + " " + prenom).trim(),
-        Email: email || "",
-        Date_Inscription: new Date().toISOString().split('T')[0]
+        nomComplet: (nom + " " + prenom).trim(),
+        email: email || "",
+        date: new Date().toISOString().split('T')[0]
       };
 
       document.getElementById('step-intro').classList.add('hidden');
@@ -218,7 +214,6 @@
       }
     }
 
-    // Écriture finale unique dans Grist
     async function submitAllAnswers() {
       const btn = document.getElementById('next-btn');
       btn.disabled = true;
@@ -228,27 +223,67 @@
       const dateISO = new Date().toISOString();
 
       try {
-        // 1. Création du manager dans Utilisateurs
+        // 1. Création propre du profil manager
         const resUser = await grist.docApi.applyUserActions([
-          ['AddRecord', 'Utilisateurs', null, managerInfos]
+          ['AddRecord', 'Utilisateurs', null, {
+            Nom: managerInfos.nomComplet,
+            Email: managerInfos.email,
+            Date_Inscription: managerInfos.date
+          }]
         ]);
-        const newUserId = Array.isArray(resUser) ? (resUser[0]?.id || resUser[0]) : (resUser?.id || resUser);
 
-        // 2. Création des 20 réponses dans Reponses
-        const actionsReponses = QUESTIONS.map(q => ['AddRecord', 'Reponses', null, {
-          Utilisateur_ID: newUserId,
-          Question_ID: q.id,
-          Note: userAnswers[q.id],
-          Date_Réponse: dateISO
-        }]);
+        // Extraction de l'ID réel créé par Grist
+        let newUserId = null;
+        if (Array.isArray(resUser) && resUser.length > 0) {
+          newUserId = (typeof resUser[0] === 'object' && resUser[0] !== null) ? (resUser[0].id || resUser[0].rowId) : resUser[0];
+        } else if (resUser && typeof resUser === 'object') {
+          newUserId = resUser.id || resUser.rowId;
+        } else {
+          newUserId = resUser;
+        }
 
-        await grist.docApi.applyUserActions(actionsReponses);
+        // Si l'ID n'a pas pu être extrait, récupérer la dernière ligne créée dans Utilisateurs
+        if (!newUserId || newUserId === 0) {
+          const tableUsers = await grist.docApi.fetchTable('Utilisateurs');
+          if (tableUsers && tableUsers.id && tableUsers.id.length > 0) {
+            newUserId = tableUsers.id[tableUsers.id.length - 1];
+          }
+        }
+
+        // 2. Préparation des colonnes pour AddRecords
+        const colUserIds = [];
+        const colQuestionIds = [];
+        const colNotes = [];
+        const colScores = [];
+        const colDates = [];
+
+        QUESTIONS.forEach(q => {
+          const valTexte = userAnswers[q.id] || "1 - Pas d'accord";
+          const valNum = parseInt(valTexte.charAt(0)) || 1;
+
+          colUserIds.push(newUserId);
+          colQuestionIds.push(q.id);
+          colNotes.push(valTexte);
+          colScores.push(valNum);
+          colDates.push(dateISO);
+        });
+
+        // 3. Écriture groupée dans Reponses
+        await grist.docApi.applyUserActions([
+          ['AddRecords', 'Reponses', null, {
+            Utilisateur_ID: colUserIds,
+            Question_ID: colQuestionIds,
+            Note: colNotes,
+            Score: colScores,
+            Date_Réponse: colDates
+          }]
+        ]);
 
         document.getElementById('step-quiz').classList.add('hidden');
         document.getElementById('step-success').classList.remove('hidden');
       } catch (err) {
-        console.error("Erreur d'écriture dans Grist :", err);
-        showError("Une erreur est survenue lors de l'enregistrement. Vérifiez que le niveau d'accès du widget est réglé sur 'Accès complet au document'.");
+        console.error("Erreur enregistrement final :", err);
+        showError("Détail de l'erreur : " + (err.message || err));
         btn.disabled = false;
         btn.innerText = 'Réessayer';
       }
