@@ -145,7 +145,6 @@
     function demarrerQuiz() {
       const nom = document.getElementById('user-nom').value.trim();
       const prenom = document.getElementById('user-prenom').value.trim();
-      const fonction = document.getElementById('user-fonction').value.trim();
       const email = document.getElementById('user-email').value.trim();
 
       if (!nom) {
@@ -155,11 +154,9 @@
 
       document.getElementById('error-box').classList.add('hidden');
 
+      // Pour éviter tout KeyError lié aux colonnes masquées, le nom complet est regroupé dans Nom
       managerInfos = {
-        Nom: nom,
-        Prenom: prenom,
-        Prénom: prenom,
-        Fonction: fonction,
+        Nom: (nom + " " + prenom).trim(),
         Email: email || "",
         Date_Inscription: new Date().toISOString().split('T')[0]
       };
@@ -232,14 +229,11 @@
           nomTableReponses = 'Réponses';
         }
 
-        // 1. Création de l'utilisateur
+        // 1. Création de l'utilisateur avec les champs strictement visibles (Nom, Email, Date_Inscription)
         const resUser = await grist.docApi.applyUserActions([
           ['AddRecord', 'Utilisateurs', null, {
             Nom: managerInfos.Nom,
-            Prenom: managerInfos.Prenom || "",
-            Prénom: managerInfos.Prenom || "",
-            Fonction: managerInfos.Fonction || "",
-            Email: managerInfos.Email || "",
+            Email: managerInfos.Email,
             Date_Inscription: managerInfos.Date_Inscription
           }]
         ]);
@@ -258,8 +252,8 @@
           newUserId = tUsers.id[tUsers.id.length - 1];
         }
 
-        // 2. Écriture des réponses SANS envoyer la colonne Score
-const actions = QUESTIONS.map(q => {
+        // 2. Écriture des 20 réponses : uniquement les colonnes indispensables (ni Score, ni Date)
+        const actions = QUESTIONS.map(q => {
           return ['AddRecord', nomTableReponses, null, {
             Utilisateur_ID: newUserId,
             Question_ID: q.id,
