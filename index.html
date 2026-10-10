@@ -259,7 +259,7 @@
         }
 
         // 2. Écriture des réponses SANS envoyer la colonne Score
-        const actions = QUESTIONS.map(q => {
+const actions = QUESTIONS.map(q => {
           return ['AddRecord', nomTableReponses, null, {
             Utilisateur_ID: newUserId,
             Question_ID: q.id,
