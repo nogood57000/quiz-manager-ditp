@@ -1,1 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Radar de Restitution Individuelle</title>
+  <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white p-3 flex flex-col items-center justify-center min-h-[380px] select-none">
+  
+  <div class="w-full text-center mb-1">
+    <h2 id="manager-title" class="text-sm font-bold text-slate-800">Sélectionnez un manager</h2>
+    <p class="text-[11px] text-slate-400">Positionnement managérial (échelle 1 à 4)</p>
+  </div>
 
+  <div class="relative w-full max-w-[340px] aspect-square">
+    <canvas id="radarChart"></canvas>
+  </div>
+
+  <script>
+    let radarChart = null;
+
+    function initChart() {
+      const ctx = document.getElementById('radarChart').getContext('2d');
+      radarChart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: ['Communication', "Gestion d'équipe", 'Adaptation', 'Leadership'],
+          datasets: [{
+            label: 'Score',
+            data: [0, 0, 0, 0],
+            backgroundColor: 'rgba(79, 70, 229, 0.20)',
+            borderColor: 'rgba(79, 70, 229, 1)',
+            borderWidth: 2,
+            pointBackgroundColor: 'rgba(79, 70, 229, 1)',
+            pointBorderColor: '#fff',
+            pointRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          scales: {
+            r: {
+              min: 0,
+              max: 4,
+              ticks: {
+                stepSize: 1,
+                display: true,
+                backdropColor: 'transparent',
+                font: { size: 9 }
+              },
+              pointLabels: {
+                font: { size: 11, weight: '600' },
+                color: '#334155'
+              },
+              grid: { color: '#f1f5f9' },
+              angleLines: { color: '#e2e8f0' }
+            }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    initChart();
+
+    grist.ready({ requiredAccess: 'read table' });
+
+    // Mise à jour dès qu'une ligne est sélectionnée dans Grist
+    grist.onRecord(record => {
+      if (!record) return;
+
+      const nom = record.Nom || "Manager sélectionné";
+      document.getElementById('manager-title').innerText = nom;
+
+      const comm = parseFloat(record.Score_Communication) || 0;
+      const equipe = parseFloat(record.Score_Gestion_Equipe) || 0;
+      const adapt = parseFloat(record.Score_Adaptation) || 0;
+      const lead = parseFloat(record.Score_Leadership) || 0;
+
+      radarChart.data.datasets[0].data = [comm, equipe, adapt, lead];
+      radarChart.update();
+    });
+  </script>
+</body>
+</html>
