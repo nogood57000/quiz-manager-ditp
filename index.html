@@ -13,7 +13,7 @@
 
   <div class="w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-slate-200/80 p-6 md:p-10 relative">
 
-    <!-- ÉCRAN 1 : IDENTIFICATION (SANS FORMULAIRE POUR ÉVITER LE RELOAD) -->
+    <!-- ÉCRAN 1 : IDENTIFICATION -->
     <div id="step-intro">
       <div class="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-full uppercase tracking-wider mb-4">
         <span>⏱ 5 minutes • 20 questions</span>
@@ -47,7 +47,7 @@
         </div>
 
         <div class="pt-4">
-          <button type="button" id="btn-start" onclick="validerEtDemarrer()" class="w-full py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition shadow-sm cursor-pointer">
+          <button type="button" id="btn-start" onclick="demarrerQuiz()" class="w-full py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition shadow-sm cursor-pointer">
             Commencer le questionnaire →
           </button>
         </div>
@@ -89,11 +89,12 @@
       <p class="text-sm text-slate-600 max-w-md mx-auto leading-relaxed mb-6">
         Votre questionnaire est validé. Vos réponses alimentent désormais votre synthèse individuelle ainsi que la vue d'équipe.
       </p>
-      <div class="inline-block px-4 py-2 bg-slate-100 text-slate-600 text-xs font-semibold rounded-lg">
-        Vous pouvez fermer cet écran ou passer au manager suivant.
-      </div>
+      <button type="button" onclick="location.reload()" class="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-200 transition">
+        Saisir un autre questionnaire
+      </button>
     </div>
 
+    <!-- MESSAGE D'ERREUR -->
     <div id="error-box" class="hidden mt-4 p-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl"></div>
 
   </div>
@@ -129,12 +130,13 @@
       { id: 20, categorie: "Adaptation", texte: "Q20 : Je m’adapte aux changements." }
     ];
 
-    let currentUserId = null;
-    let managerNomComplet = "";
+    let managerInfos = {};
     let currentIndex = 0;
     let userAnswers = {};
 
-    grist.ready({ requiredAccess: 'full' });
+    try {
+      grist.ready({ requiredAccess: 'full' });
+    } catch(e) {}
 
     function showError(msg) {
       const box = document.getElementById('error-box');
@@ -142,48 +144,26 @@
       box.classList.remove('hidden');
     }
 
-    async function validerEtDemarrer() {
-      const nomInput = document.getElementById('user-nom').value.trim();
-      const prenomInput = document.getElementById('user-prenom').value.trim();
-      const emailInput = document.getElementById('user-email').value.trim();
+    // Bascule immédiate sans toucher à Grist
+    function demarrerQuiz() {
+      const nom = document.getElementById('user-nom').value.trim();
+      const prenom = document.getElementById('user-prenom').value.trim();
+      const fonction = document.getElementById('user-fonction').value.trim();
+      const email = document.getElementById('user-email').value.trim();
 
-      if (!nomInput) {
-        showError("Veuillez saisir au moins votre nom.");
+      if (!nom) {
+        showError("Veuillez saisir au moins un nom.");
         return;
       }
 
-      const startBtn = document.getElementById('btn-start');
-      startBtn.disabled = true;
-      startBtn.innerText = "Initialisation...";
       document.getElementById('error-box').classList.add('hidden');
 
-      managerNomComplet = (nomInput + " " + prenomInput).trim();
-      const dateJour = new Date().toISOString().split('T')[0];
+      managerInfos = {
+        Nom: (nom + " " + prenom).trim(),
+        Email: email || "",
+        Date_Inscription: new Date().toISOString().split('T')[0]
+      };
 
-      try {
-        // Enregistrement standard dans la table Utilisateurs
-        const res = await grist.docApi.applyUserActions([
-          ['AddRecord', 'Utilisateurs', null, {
-            Nom: managerNomComplet,
-            Email: emailInput,
-            Date_Inscription: dateJour
-          }]
-        ]);
-
-        if (Array.isArray(res) && res.length > 0) {
-          currentUserId = typeof res[0] === 'object' ? res[0].id : res[0];
-        } else if (res && typeof res === 'object') {
-          currentUserId = res.id;
-        } else {
-          currentUserId = res;
-        }
-      } catch (e) {
-        console.warn("Création de l'utilisateur reportée à la fin :", e);
-        // Si l'écriture échoue à cause d'une restriction temporaire, on ne bloque pas le test
-        currentUserId = null;
-      }
-
-      // Basculement immédiat vers les questions (plus de vidage des champs)
       document.getElementById('step-intro').classList.add('hidden');
       document.getElementById('step-quiz').classList.remove('hidden');
       currentIndex = 0;
@@ -238,41 +218,37 @@
       }
     }
 
+    // Écriture finale unique dans Grist
     async function submitAllAnswers() {
       const btn = document.getElementById('next-btn');
       btn.disabled = true;
-      btn.innerText = 'Enregistrement...';
+      btn.innerText = 'Enregistrement en cours...';
       document.getElementById('error-box').classList.add('hidden');
 
       const dateISO = new Date().toISOString();
 
       try {
-        // Si l'utilisateur n'avait pas pu être créé au début, on le crée maintenant
-        if (!currentUserId) {
-          const res = await grist.docApi.applyUserActions([
-            ['AddRecord', 'Utilisateurs', null, {
-              Nom: managerNomComplet || "Manager Test",
-              Date_Inscription: dateISO.split('T')[0]
-            }]
-          ]);
-          currentUserId = Array.isArray(res) ? (res[0]?.id || res[0]) : (res?.id || res);
-        }
+        // 1. Création du manager dans Utilisateurs
+        const resUser = await grist.docApi.applyUserActions([
+          ['AddRecord', 'Utilisateurs', null, managerInfos]
+        ]);
+        const newUserId = Array.isArray(resUser) ? (resUser[0]?.id || resUser[0]) : (resUser?.id || resUser);
 
-        // Envoi des 20 réponses dans Reponses
-        const actions = QUESTIONS.map(q => ['AddRecord', 'Reponses', null, {
-          Utilisateur_ID: currentUserId,
+        // 2. Création des 20 réponses dans Reponses
+        const actionsReponses = QUESTIONS.map(q => ['AddRecord', 'Reponses', null, {
+          Utilisateur_ID: newUserId,
           Question_ID: q.id,
           Note: userAnswers[q.id],
           Date_Réponse: dateISO
         }]);
 
-        await grist.docApi.applyUserActions(actions);
+        await grist.docApi.applyUserActions(actionsReponses);
 
         document.getElementById('step-quiz').classList.add('hidden');
         document.getElementById('step-success').classList.remove('hidden');
       } catch (err) {
-        console.error("Erreur enregistrement réponses :", err);
-        showError("Impossible d'enregistrer dans la table Reponses. Vérifiez que la colonne 'Note' est bien en colonne de données standard.");
+        console.error("Erreur d'écriture dans Grist :", err);
+        showError("Une erreur est survenue lors de l'enregistrement. Vérifiez que le niveau d'accès du widget est réglé sur 'Accès complet au document'.");
         btn.disabled = false;
         btn.innerText = 'Réessayer';
       }
