@@ -155,9 +155,9 @@
       document.getElementById('error-box').classList.add('hidden');
 
       managerInfos = {
-        nomComplet: (nom + " " + prenom).trim(),
-        email: email || "",
-        date: new Date().toISOString().split('T')[0]
+        Nom: (nom + " " + prenom).trim(),
+        Email: email || "",
+        Date_Inscription: new Date().toISOString().split('T')[0]
       };
 
       document.getElementById('step-intro').classList.add('hidden');
@@ -223,16 +223,19 @@
       const dateISO = new Date().toISOString();
 
       try {
-        // 1. Création propre du profil manager
+        // 1. Déterminer le nom exact de la table des réponses (avec ou sans accent)
+        let nomTableReponses = 'Reponses';
+        try {
+          await grist.docApi.fetchTable('Reponses');
+        } catch(e) {
+          nomTableReponses = 'Réponses';
+        }
+
+        // 2. Création de l'utilisateur
         const resUser = await grist.docApi.applyUserActions([
-          ['AddRecord', 'Utilisateurs', null, {
-            Nom: managerInfos.nomComplet,
-            Email: managerInfos.email,
-            Date_Inscription: managerInfos.date
-          }]
+          ['AddRecord', 'Utilisateurs', null, managerInfos]
         ]);
 
-        // Extraction de l'ID réel créé par Grist
         let newUserId = null;
         if (Array.isArray(resUser) && resUser.length > 0) {
           newUserId = (typeof resUser[0] === 'object' && resUser[0] !== null) ? (resUser[0].id || resUser[0].rowId) : resUser[0];
@@ -242,48 +245,31 @@
           newUserId = resUser;
         }
 
-        // Si l'ID n'a pas pu être extrait, récupérer la dernière ligne créée dans Utilisateurs
-        if (!newUserId || newUserId === 0) {
-          const tableUsers = await grist.docApi.fetchTable('Utilisateurs');
-          if (tableUsers && tableUsers.id && tableUsers.id.length > 0) {
-            newUserId = tableUsers.id[tableUsers.id.length - 1];
-          }
+        if (!newUserId) {
+          const tUsers = await grist.docApi.fetchTable('Utilisateurs');
+          newUserId = tUsers.id[tUsers.id.length - 1];
         }
 
-        // 2. Préparation des colonnes pour AddRecords
-        const colUserIds = [];
-        const colQuestionIds = [];
-        const colNotes = [];
-        const colScores = [];
-        const colDates = [];
-
-        QUESTIONS.forEach(q => {
+        // 3. Insertion ligne par ligne dans la table des réponses (insensible aux typages stricts)
+        const actions = QUESTIONS.map(q => {
           const valTexte = userAnswers[q.id] || "1 - Pas d'accord";
           const valNum = parseInt(valTexte.charAt(0)) || 1;
-
-          colUserIds.push(newUserId);
-          colQuestionIds.push(q.id);
-          colNotes.push(valTexte);
-          colScores.push(valNum);
-          colDates.push(dateISO);
+          return ['AddRecord', nomTableReponses, null, {
+            Utilisateur_ID: newUserId,
+            Question_ID: q.id,
+            Note: valTexte,
+            Score: valNum,
+            Date_Réponse: dateISO
+          }];
         });
 
-        // 3. Écriture groupée dans Reponses
-        await grist.docApi.applyUserActions([
-          ['AddRecords', 'Reponses', null, {
-            Utilisateur_ID: colUserIds,
-            Question_ID: colQuestionIds,
-            Note: colNotes,
-            Score: colScores,
-            Date_Réponse: colDates
-          }]
-        ]);
+        await grist.docApi.applyUserActions(actions);
 
         document.getElementById('step-quiz').classList.add('hidden');
         document.getElementById('step-success').classList.remove('hidden');
       } catch (err) {
-        console.error("Erreur enregistrement final :", err);
-        showError("Détail de l'erreur : " + (err.message || err));
+        console.error("Erreur détaillée :", err);
+        showError("Erreur : " + (err.message || JSON.stringify(err)));
         btn.disabled = false;
         btn.innerText = 'Réessayer';
       }
