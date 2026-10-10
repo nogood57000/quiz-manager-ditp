@@ -13,7 +13,7 @@
 
   <div class="w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-slate-200/80 p-6 md:p-10 relative">
 
-    <!-- ÉCRAN 1 : IDENTIFICATION -->
+    <!-- ÉCRAN 1 : IDENTIFICATION (SANS FORMULAIRE POUR ÉVITER LE RELOAD) -->
     <div id="step-intro">
       <div class="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-full uppercase tracking-wider mb-4">
         <span>⏱ 5 minutes • 20 questions</span>
@@ -23,35 +23,35 @@
         Ce questionnaire explore vos pratiques professionnelles sur 4 dimensions : <strong>Communication, Gestion d'équipe, Adaptation et Leadership</strong>. Vos réponses permettront d'établir votre profil individuel et de nourrir les ateliers collectifs.
       </p>
 
-      <form id="user-form" onsubmit="startQuiz(event)" class="space-y-4">
+      <div class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Nom *</label>
-            <input type="text" id="user-nom" required class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Ex. DUPONT">
+            <input type="text" id="user-nom" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Ex. DUPONT">
           </div>
           <div>
-            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Prénom *</label>
-            <input type="text" id="user-prenom" required class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Ex. Claire">
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Prénom</label>
+            <input type="text" id="user-prenom" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Ex. Claire">
           </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Fonction *</label>
-            <input type="text" id="user-fonction" required class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Ex. Responsable d'unité">
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Fonction</label>
+            <input type="text" id="user-fonction" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Ex. Responsable d'unité">
           </div>
           <div>
-            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Email *</label>
-            <input type="email" id="user-email" required class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="prenom.nom@justice.fr">
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Email</label>
+            <input type="email" id="user-email" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="prenom.nom@justice.fr">
           </div>
         </div>
 
         <div class="pt-4">
-          <button type="submit" id="btn-start" class="w-full py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition shadow-sm">
+          <button type="button" id="btn-start" onclick="validerEtDemarrer()" class="w-full py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition shadow-sm cursor-pointer">
             Commencer le questionnaire →
           </button>
         </div>
-      </form>
+      </div>
     </div>
 
     <!-- ÉCRAN 2 : QUESTIONNAIRE -->
@@ -73,24 +73,24 @@
       <div id="options-container" class="grid grid-cols-1 gap-2.5 mb-6"></div>
 
       <div class="flex justify-between items-center pt-4 border-t border-slate-100">
-        <button id="prev-btn" onclick="prevQuestion()" class="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-800 disabled:opacity-30 disabled:pointer-events-none">
+        <button type="button" id="prev-btn" onclick="prevQuestion()" class="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer">
           ← Précédent
         </button>
-        <button id="next-btn" onclick="nextQuestion()" disabled class="px-6 py-2.5 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-40 disabled:pointer-events-none shadow-sm transition">
+        <button type="button" id="next-btn" onclick="nextQuestion()" disabled class="px-6 py-2.5 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-40 disabled:pointer-events-none shadow-sm transition cursor-pointer">
           Suivant →
         </button>
       </div>
     </div>
 
-    <!-- ÉCRAN 3 : CONFIRMATION -->
+    <!-- ÉCRAN 3 : CONFIRMATION FINALE -->
     <div id="step-success" class="hidden text-center py-8">
       <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl font-bold">✓</div>
       <h2 class="text-2xl font-bold text-slate-900 mb-2">Réponses enregistrées avec succès</h2>
       <p class="text-sm text-slate-600 max-w-md mx-auto leading-relaxed mb-6">
-        Votre questionnaire est validé. Vos résultats alimentent désormais votre synthèse individuelle et la vue d'équipe.
+        Votre questionnaire est validé. Vos réponses alimentent désormais votre synthèse individuelle ainsi que la vue d'équipe.
       </p>
       <div class="inline-block px-4 py-2 bg-slate-100 text-slate-600 text-xs font-semibold rounded-lg">
-        Vous pouvez fermer cet onglet en toute sécurité.
+        Vous pouvez fermer cet écran ou passer au manager suivant.
       </div>
     </div>
 
@@ -99,4 +99,184 @@
   </div>
 
   <script>
-    const
+    const ECHELLE = [
+      "1 - Pas d'accord",
+      "2 - Plutôt pas d'accord",
+      "3 - Plutôt d'accord",
+      "4 - Tout à fait d'accord"
+    ];
+
+    const QUESTIONS = [
+      { id: 1, categorie: "Gestion d'équipe", texte: "Q1 : J’adapte la composition de mon équipe en fonction des objectifs." },
+      { id: 2, categorie: "Gestion d'équipe", texte: "Q2 : Je résous les conflits au sein de mon équipe de manière efficace." },
+      { id: 3, categorie: "Gestion d'équipe", texte: "Q3 : Je délègue les tâches et responsabilités de manière claire." },
+      { id: 4, categorie: "Gestion d'équipe", texte: "Q4 : Je prends en compte les besoins et attentes de mes collaborateurs." },
+      { id: 5, categorie: "Communication", texte: "Q5 : J’organise des réunions participatives pour favoriser les échanges." },
+      { id: 6, categorie: "Communication", texte: "Q6 : Je pratique l’écoute active et suis disponible pour mon équipe." },
+      { id: 7, categorie: "Gestion d'équipe", texte: "Q7 : Je définis les tâches en tenant compte des priorités et des délais." },
+      { id: 8, categorie: "Adaptation", texte: "Q8 : Je gère les imprévus sans perdre de vue les objectifs." },
+      { id: 9, categorie: "Leadership", texte: "Q9 : J’utilise des outils d’analyse et des indicateurs de performance." },
+      { id: 10, categorie: "Communication", texte: "Q10 : Je communique clairement sur les changements à venir et leurs impacts." },
+      { id: 11, categorie: "Adaptation", texte: "Q11 : Je m’implique dans la gestion du changement." },
+      { id: 12, categorie: "Adaptation", texte: "Q12 : Je suis ouvert aux nouvelles idées et encourage l’innovation." },
+      { id: 13, categorie: "Gestion d'équipe", texte: "Q13 : J’ajuste les ressources allouées pour garantir la réussite des projets." },
+      { id: 14, categorie: "Leadership", texte: "Q14 : Je prends des décisions basées sur l’analyse des problèmes et des résultats." },
+      { id: 15, categorie: "Gestion d'équipe", texte: "Q15 : Je gère mon temps efficacement." },
+      { id: 16, categorie: "Leadership", texte: "Q16 : Je prends des décisions difficiles et m’adapte en situation complexe." },
+      { id: 17, categorie: "Leadership", texte: "Q17 : J’inspire confiance et respect par mon leadership." },
+      { id: 18, categorie: "Adaptation", texte: "Q18 : Je maintiens un équilibre entre vie professionnelle et vie personnelle." },
+      { id: 19, categorie: "Adaptation", texte: "Q19 : Je développe continuellement mes compétences professionnelles et personnelles." },
+      { id: 20, categorie: "Adaptation", texte: "Q20 : Je m’adapte aux changements." }
+    ];
+
+    let currentUserId = null;
+    let managerNomComplet = "";
+    let currentIndex = 0;
+    let userAnswers = {};
+
+    grist.ready({ requiredAccess: 'full' });
+
+    function showError(msg) {
+      const box = document.getElementById('error-box');
+      box.innerText = msg;
+      box.classList.remove('hidden');
+    }
+
+    async function validerEtDemarrer() {
+      const nomInput = document.getElementById('user-nom').value.trim();
+      const prenomInput = document.getElementById('user-prenom').value.trim();
+      const emailInput = document.getElementById('user-email').value.trim();
+
+      if (!nomInput) {
+        showError("Veuillez saisir au moins votre nom.");
+        return;
+      }
+
+      const startBtn = document.getElementById('btn-start');
+      startBtn.disabled = true;
+      startBtn.innerText = "Initialisation...";
+      document.getElementById('error-box').classList.add('hidden');
+
+      managerNomComplet = (nomInput + " " + prenomInput).trim();
+      const dateJour = new Date().toISOString().split('T')[0];
+
+      try {
+        // Enregistrement standard dans la table Utilisateurs
+        const res = await grist.docApi.applyUserActions([
+          ['AddRecord', 'Utilisateurs', null, {
+            Nom: managerNomComplet,
+            Email: emailInput,
+            Date_Inscription: dateJour
+          }]
+        ]);
+
+        if (Array.isArray(res) && res.length > 0) {
+          currentUserId = typeof res[0] === 'object' ? res[0].id : res[0];
+        } else if (res && typeof res === 'object') {
+          currentUserId = res.id;
+        } else {
+          currentUserId = res;
+        }
+      } catch (e) {
+        console.warn("Création de l'utilisateur reportée à la fin :", e);
+        // Si l'écriture échoue à cause d'une restriction temporaire, on ne bloque pas le test
+        currentUserId = null;
+      }
+
+      // Basculement immédiat vers les questions (plus de vidage des champs)
+      document.getElementById('step-intro').classList.add('hidden');
+      document.getElementById('step-quiz').classList.remove('hidden');
+      currentIndex = 0;
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      const q = QUESTIONS[currentIndex];
+      document.getElementById('dimension-tag').innerText = q.categorie;
+      document.getElementById('step-counter').innerText = `Question ${currentIndex + 1} / ${QUESTIONS.length}`;
+      document.getElementById('progress-bar').style.width = `${((currentIndex + 1) / QUESTIONS.length) * 100}%`;
+      document.getElementById('question-text').innerText = q.texte;
+
+      const container = document.getElementById('options-container');
+      container.innerHTML = '';
+
+      ECHELLE.forEach(option => {
+        const isSelected = userAnswers[q.id] === option;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `w-full text-left p-3.5 rounded-xl border text-sm font-medium transition-all cursor-pointer ${
+          isSelected 
+            ? 'border-indigo-600 bg-indigo-50 text-indigo-950 ring-2 ring-indigo-500/20' 
+            : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+        }`;
+        btn.innerText = option;
+        btn.onclick = () => {
+          userAnswers[q.id] = option;
+          renderQuestion();
+        };
+        container.appendChild(btn);
+      });
+
+      document.getElementById('prev-btn').disabled = (currentIndex === 0);
+      document.getElementById('next-btn').disabled = !userAnswers[q.id];
+      document.getElementById('next-btn').innerText = (currentIndex === QUESTIONS.length - 1) ? 'Transmettre mes réponses' : 'Suivant →';
+    }
+
+    function prevQuestion() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        renderQuestion();
+      }
+    }
+
+    async function nextQuestion() {
+      if (currentIndex < QUESTIONS.length - 1) {
+        currentIndex++;
+        renderQuestion();
+      } else {
+        await submitAllAnswers();
+      }
+    }
+
+    async function submitAllAnswers() {
+      const btn = document.getElementById('next-btn');
+      btn.disabled = true;
+      btn.innerText = 'Enregistrement...';
+      document.getElementById('error-box').classList.add('hidden');
+
+      const dateISO = new Date().toISOString();
+
+      try {
+        // Si l'utilisateur n'avait pas pu être créé au début, on le crée maintenant
+        if (!currentUserId) {
+          const res = await grist.docApi.applyUserActions([
+            ['AddRecord', 'Utilisateurs', null, {
+              Nom: managerNomComplet || "Manager Test",
+              Date_Inscription: dateISO.split('T')[0]
+            }]
+          ]);
+          currentUserId = Array.isArray(res) ? (res[0]?.id || res[0]) : (res?.id || res);
+        }
+
+        // Envoi des 20 réponses dans Reponses
+        const actions = QUESTIONS.map(q => ['AddRecord', 'Reponses', null, {
+          Utilisateur_ID: currentUserId,
+          Question_ID: q.id,
+          Note: userAnswers[q.id],
+          Date_Réponse: dateISO
+        }]);
+
+        await grist.docApi.applyUserActions(actions);
+
+        document.getElementById('step-quiz').classList.add('hidden');
+        document.getElementById('step-success').classList.remove('hidden');
+      } catch (err) {
+        console.error("Erreur enregistrement réponses :", err);
+        showError("Impossible d'enregistrer dans la table Reponses. Vérifiez que la colonne 'Note' est bien en colonne de données standard.");
+        btn.disabled = false;
+        btn.innerText = 'Réessayer';
+      }
+    }
+  </script>
+</body>
+</html>
