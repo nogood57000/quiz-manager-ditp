@@ -230,9 +230,11 @@
         }
 
         // 1. Création de l'utilisateur avec les champs strictement visibles (Nom, Email, Date_Inscription)
-        const resUser = await grist.docApi.applyUserActions([
+const resUser = await grist.docApi.applyUserActions([
           ['AddRecord', 'Utilisateurs', null, {
             Nom: managerInfos.Nom,
+            Prenom: managerInfos.Prenom,
+            Fonction: managerInfos.Fonction,
             Email: managerInfos.Email,
             Date_Inscription: managerInfos.Date_Inscription
           }]
