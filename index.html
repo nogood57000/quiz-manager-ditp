@@ -155,8 +155,9 @@
       document.getElementById('error-box').classList.add('hidden');
 
       // Pour éviter tout KeyError lié aux colonnes masquées, le nom complet est regroupé dans Nom
-      managerInfos = {
+managerInfos = {
         Nom: (nom + " " + prenom).trim(),
+        Fonction: fonction || "",
         Email: email || "",
         Date_Inscription: new Date().toISOString().split('T')[0]
       };
