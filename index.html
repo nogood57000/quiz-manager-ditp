@@ -215,7 +215,7 @@
       }
     }
 
-    async function submitAllAnswers() {
+async function submitAllAnswers() {
       const btn = document.getElementById('next-btn');
       btn.disabled = true;
       btn.innerText = 'Enregistrement en cours...';
@@ -229,16 +229,31 @@
           nomTableReponses = 'Réponses';
         }
 
-        // 1. Création de l'utilisateur avec les champs strictement visibles (Nom, Email, Date_Inscription)
-const resUser = await grist.docApi.applyUserActions([
-          ['AddRecord', 'Utilisateurs', null, {
-            Nom: managerInfos.Nom,
-            Prenom: managerInfos.Prenom,
-            Fonction: managerInfos.Fonction,
-            Email: managerInfos.Email,
-            Date_Inscription: managerInfos.Date_Inscription
-          }]
-        ]);
+        // 1. Création de l'utilisateur avec la Fonction
+        const donneesUser = {
+          Nom: managerInfos.Nom,
+          Email: managerInfos.Email,
+          Date_Inscription: managerInfos.Date_Inscription
+        };
+        if (managerInfos.Fonction) {
+          donneesUser.Fonction = managerInfos.Fonction;
+        }
+
+        let resUser;
+        try {
+          resUser = await grist.docApi.applyUserActions([
+            ['AddRecord', 'Utilisateurs', null, donneesUser]
+          ]);
+        } catch (errUser) {
+          console.warn("Échec avec Fonction, repli standard :", errUser);
+          resUser = await grist.docApi.applyUserActions([
+            ['AddRecord', 'Utilisateurs', null, {
+              Nom: managerInfos.Nom,
+              Email: managerInfos.Email,
+              Date_Inscription: managerInfos.Date_Inscription
+            }]
+          ]);
+        }
 
         let newUserId = null;
         if (Array.isArray(resUser) && resUser.length > 0) {
@@ -254,7 +269,7 @@ const resUser = await grist.docApi.applyUserActions([
           newUserId = tUsers.id[tUsers.id.length - 1];
         }
 
-        // 2. Écriture des 20 réponses : uniquement les colonnes indispensables (ni Score, ni Date)
+        // 2. Écriture des 20 réponses
         const actions = QUESTIONS.map(q => {
           return ['AddRecord', nomTableReponses, null, {
             Utilisateur_ID: newUserId,
