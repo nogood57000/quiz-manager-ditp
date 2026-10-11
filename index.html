@@ -145,6 +145,7 @@
     function demarrerQuiz() {
       const nom = document.getElementById('user-nom').value.trim();
       const prenom = document.getElementById('user-prenom').value.trim();
+      const fonction = document.getElementById('user-fonction').value.trim();
       const email = document.getElementById('user-email').value.trim();
 
       if (!nom) {
@@ -154,8 +155,7 @@
 
       document.getElementById('error-box').classList.add('hidden');
 
-      // Pour éviter tout KeyError lié aux colonnes masquées, le nom complet est regroupé dans Nom
-managerInfos = {
+      managerInfos = {
         Nom: (nom + " " + prenom).trim(),
         Fonction: fonction || "",
         Email: email || "",
@@ -216,7 +216,7 @@ managerInfos = {
       }
     }
 
-async function submitAllAnswers() {
+    async function submitAllAnswers() {
       const btn = document.getElementById('next-btn');
       btn.disabled = true;
       btn.innerText = 'Enregistrement en cours...';
@@ -230,7 +230,7 @@ async function submitAllAnswers() {
           nomTableReponses = 'Réponses';
         }
 
-        // 1. Création de l'utilisateur avec la Fonction
+        // 1. Enregistrement du manager avec le champ Fonction
         const donneesUser = {
           Nom: managerInfos.Nom,
           Email: managerInfos.Email,
