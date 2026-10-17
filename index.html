@@ -214,7 +214,7 @@
       }
     }
 
-    async function submitAllAnswersRelay() {
+async function submitAllAnswersRelay() {
       const btn = document.getElementById('next-btn');
       btn.disabled = true;
       btn.innerText = 'Envoi en cours...';
@@ -230,17 +230,16 @@
           }))
         };
 
-        // Envoi via le relais Google Apps Script en text/plain pour neutraliser les restrictions CORS du navigateur
+        // Envoi sous forme d'URLSearchParams : standard formulaire universellement accepté par Google Apps Script
+        const formData = new URLSearchParams();
+        formData.append('data', JSON.stringify(payload));
+
         await fetch(GOOGLE_SCRIPT_URL, {
           method: 'POST',
           mode: 'no-cors',
-          headers: {
-            'Content-Type': 'text/plain;charset=utf-8'
-          },
-          body: JSON.stringify(payload)
+          body: formData
         });
 
-        // Affichage immédiat de l'écran de confirmation
         document.getElementById('step-quiz').classList.add('hidden');
         document.getElementById('step-success').classList.remove('hidden');
 
