@@ -4,59 +4,55 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Auto-évaluation Managériale</title>
-  <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style> body { font-family: 'Inter', sans-serif; } </style>
+  <style>
+    body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+  </style>
 </head>
-<body class="bg-slate-100/70 text-slate-800 min-h-screen flex items-center justify-center p-4">
+<body class="bg-slate-100/80 text-slate-800 min-h-screen flex items-center justify-center p-3 sm:p-6">
 
-  <div class="w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-slate-200/80 p-6 md:p-10 relative">
+  <div class="w-full max-w-xl bg-white rounded-2xl shadow-xl border border-slate-200/80 p-5 sm:p-8 relative">
 
     <!-- ÉCRAN 1 : IDENTIFICATION -->
     <div id="step-intro">
       <div class="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-full uppercase tracking-wider mb-4">
         <span>⏱ 5 minutes • 20 questions</span>
       </div>
-      <h1 class="text-2xl font-bold text-slate-900 mb-2">Auto-évaluation Managériale</h1>
-      <p class="text-sm text-slate-600 mb-6 leading-relaxed">
+      <h1 class="text-xl sm:text-2xl font-bold text-slate-900 mb-2">Auto-évaluation Managériale</h1>
+      <p class="text-xs sm:text-sm text-slate-600 mb-6 leading-relaxed">
         Ce questionnaire explore vos pratiques professionnelles sur 4 dimensions : <strong>Communication, Gestion d'équipe, Adaptation et Leadership</strong>. Vos réponses permettront d'établir votre profil individuel et de nourrir les ateliers collectifs.
       </p>
 
       <div class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Nom *</label>
-            <input type="text" id="user-nom" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Ex. DUPONT">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Prénom</label>
-            <input type="text" id="user-prenom" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Ex. Claire">
-          </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Nom *</label>
+          <input type="text" id="user-nom" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Ex. DUPONT">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Prénom</label>
+          <input type="text" id="user-prenom" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Ex. Claire">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Fonction</label>
+          <input type="text" id="user-fonction" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Ex. Responsable d'unité">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Email</label>
+          <input type="email" id="user-email" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="prenom.nom@justice.fr">
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Fonction</label>
-            <input type="text" id="user-fonction" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Ex. Responsable d'unité">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Email</label>
-            <input type="email" id="user-email" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="prenom.nom@justice.fr">
-          </div>
-        </div>
-
-        <div class="pt-4">
-          <button type="button" id="btn-start" onclick="demarrerQuiz()" class="w-full py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition shadow-sm cursor-pointer">
+        <div class="pt-2">
+          <button type="button" onclick="demarrerQuiz()" class="w-full py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 active:scale-[0.99] transition shadow-sm cursor-pointer text-sm sm:text-base">
             Commencer le questionnaire →
           </button>
         </div>
       </div>
     </div>
 
-    <!-- ÉCRAN 2 : QUESTIONNAIRE -->
+    <!-- ÉCRAN 2 : QUESTIONNAIRE MOBILE-FRIENDLY -->
     <div id="step-quiz" class="hidden">
-      <div class="mb-6">
+      <div class="mb-5">
         <div class="flex justify-between items-center text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
           <span id="dimension-tag" class="text-indigo-600 font-bold">Dimension</span>
           <span id="step-counter">Question 1 / 20</span>
@@ -66,40 +62,48 @@
         </div>
       </div>
 
-      <div class="min-h-[110px] flex items-center mb-6">
-        <h2 id="question-text" class="text-lg md:text-xl font-medium text-slate-800 leading-snug"></h2>
+      <div class="min-h-[85px] sm:min-h-[100px] flex items-center mb-5">
+        <h2 id="question-text" class="text-base sm:text-lg font-medium text-slate-800 leading-snug"></h2>
       </div>
 
       <div id="options-container" class="grid grid-cols-1 gap-2.5 mb-6"></div>
 
       <div class="flex justify-between items-center pt-4 border-t border-slate-100">
-        <button type="button" id="prev-btn" onclick="prevQuestion()" class="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer">
+        <button type="button" id="prev-btn" onclick="prevQuestion()" class="px-3.5 py-2 text-xs sm:text-sm font-medium text-slate-500 hover:text-slate-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer">
           ← Précédent
         </button>
-        <button type="button" id="next-btn" onclick="nextQuestion()" disabled class="px-6 py-2.5 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-40 disabled:pointer-events-none shadow-sm transition cursor-pointer">
+        <button type="button" id="next-btn" onclick="nextQuestion()" disabled class="px-5 py-2.5 text-xs sm:text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-40 disabled:pointer-events-none shadow-sm transition cursor-pointer">
           Suivant →
         </button>
       </div>
     </div>
 
     <!-- ÉCRAN 3 : CONFIRMATION FINALE -->
-    <div id="step-success" class="hidden text-center py-8">
-      <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl font-bold">✓</div>
-      <h2 class="text-2xl font-bold text-slate-900 mb-2">Réponses enregistrées avec succès</h2>
-      <p class="text-sm text-slate-600 max-w-md mx-auto leading-relaxed mb-6">
-        Votre questionnaire est validé. Vos réponses alimentent désormais votre synthèse individuelle ainsi que la vue d'équipe.
+    <div id="step-success" class="hidden text-center py-6">
+      <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">✓</div>
+      <h2 class="text-xl sm:text-2xl font-bold text-slate-900 mb-2">Réponses transmises !</h2>
+      <p class="text-xs sm:text-sm text-slate-600 max-w-sm mx-auto leading-relaxed mb-6">
+        Merci. Vos réponses ont bien été intégrées au tableau de bord de la session. Vous pouvez poser votre smartphone.
       </p>
-      <button type="button" onclick="location.reload()" class="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-200 transition">
-        Saisir un autre questionnaire
-      </button>
     </div>
 
     <!-- ZONE D'ERREUR -->
-    <div id="error-box" class="hidden mt-4 p-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl"></div>
+    <div id="error-box" class="hidden mt-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl"></div>
 
   </div>
 
   <script>
+    // =========================================================================
+    // CONFIGURATION DYNAMIQUE DU CLASSEUR
+    // =========================================================================
+    const urlParams = new URLSearchParams(window.location.search);
+    // Détecte le paramètre ?doc=... ou prend le classeur principal par défaut
+    const GRIST_DOC_ID = urlParams.get('doc') || "bMbHaYK5mnfQ";
+    
+    // Renseignez votre clé API Grist ici :
+    const GRIST_API_KEY = "164e9d6280c5c9c37c894966c32dd8e80822ae64";
+    const GRIST_SERVER_URL = "https://docs.getgrist.com";
+
     const ECHELLE = [
       "1 - Pas d'accord",
       "2 - Plutôt pas d'accord",
@@ -134,8 +138,6 @@
     let currentIndex = 0;
     let userAnswers = {};
 
-    grist.ready({ requiredAccess: 'full' });
-
     function showError(msg) {
       const box = document.getElementById('error-box');
       box.innerText = msg;
@@ -149,7 +151,7 @@
       const email = document.getElementById('user-email').value.trim();
 
       if (!nom) {
-        showError("Veuillez renseigner au moins un nom.");
+        showError("Veuillez indiquer au moins votre nom.");
         return;
       }
 
@@ -182,9 +184,9 @@
         const isSelected = userAnswers[q.id] === option;
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = `w-full text-left p-3.5 rounded-xl border text-sm font-medium transition-all cursor-pointer ${
+        btn.className = `w-full text-left p-3 sm:p-3.5 rounded-xl border text-xs sm:text-sm font-medium transition-all cursor-pointer ${
           isSelected 
-            ? 'border-indigo-600 bg-indigo-50 text-indigo-950 ring-2 ring-indigo-500/20' 
+            ? 'border-indigo-600 bg-indigo-50 text-indigo-950 ring-2 ring-indigo-500/20 font-semibold' 
             : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-700'
         }`;
         btn.innerText = option;
@@ -212,80 +214,84 @@
         currentIndex++;
         renderQuestion();
       } else {
-        await submitAllAnswers();
+        await submitAllAnswersREST();
       }
     }
 
-    async function submitAllAnswers() {
+    async function submitAllAnswersREST() {
       const btn = document.getElementById('next-btn');
       btn.disabled = true;
-      btn.innerText = 'Enregistrement en cours...';
+      btn.innerText = 'Envoi en cours...';
       document.getElementById('error-box').classList.add('hidden');
 
       try {
-        let nomTableReponses = 'Reponses';
-        try {
-          await grist.docApi.fetchTable('Reponses');
-        } catch(e) {
-          nomTableReponses = 'Réponses';
-        }
-
-        // 1. Enregistrement du manager avec le champ Fonction
-        const donneesUser = {
-          Nom: managerInfos.Nom,
-          Email: managerInfos.Email,
-          Date_Inscription: managerInfos.Date_Inscription
+        const headers = {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${GRIST_API_KEY}`
         };
-        if (managerInfos.Fonction) {
-          donneesUser.Fonction = managerInfos.Fonction;
-        }
 
-        let resUser;
-        try {
-          resUser = await grist.docApi.applyUserActions([
-            ['AddRecord', 'Utilisateurs', null, donneesUser]
-          ]);
-        } catch (errUser) {
-          console.warn("Échec avec Fonction, repli standard :", errUser);
-          resUser = await grist.docApi.applyUserActions([
-            ['AddRecord', 'Utilisateurs', null, {
+        // 1. Création de l'utilisateur
+        const userPayload = {
+          records: [{
+            fields: {
               Nom: managerInfos.Nom,
+              Fonction: managerInfos.Fonction,
               Email: managerInfos.Email,
               Date_Inscription: managerInfos.Date_Inscription
-            }]
-          ]);
-        }
+            }
+          }]
+        };
 
-        let newUserId = null;
-        if (Array.isArray(resUser) && resUser.length > 0) {
-          newUserId = (typeof resUser[0] === 'object' && resUser[0] !== null) ? (resUser[0].id || resUser[0].rowId) : resUser[0];
-        } else if (resUser && typeof resUser === 'object') {
-          newUserId = resUser.id || resUser.rowId;
-        } else {
-          newUserId = resUser;
-        }
-
-        if (!newUserId) {
-          const tUsers = await grist.docApi.fetchTable('Utilisateurs');
-          newUserId = tUsers.id[tUsers.id.length - 1];
-        }
-
-        // 2. Écriture des 20 réponses
-        const actions = QUESTIONS.map(q => {
-          return ['AddRecord', nomTableReponses, null, {
-            Utilisateur_ID: newUserId,
-            Question_ID: q.id,
-            Note: userAnswers[q.id] || "1 - Pas d'accord"
-          }];
+        const resUserRaw = await fetch(`${GRIST_SERVER_URL}/api/docs/${GRIST_DOC_ID}/tables/Utilisateurs/records`, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(userPayload)
         });
 
-        await grist.docApi.applyUserActions(actions);
+        if (!resUserRaw.ok) {
+          const errText = await resUserRaw.text();
+          throw new Error("Erreur Utilisateur : " + errText);
+        }
+
+        const resUserData = await resUserRaw.json();
+        const newUserId = resUserData.records[0].id;
+
+        // 2. Création des 20 réponses
+        const reponsesPayload = {
+          records: QUESTIONS.map(q => ({
+            fields: {
+              Utilisateur_ID: newUserId,
+              Question_ID: q.id,
+              Note: userAnswers[q.id] || "1 - Pas d'accord"
+            }
+          }))
+        };
+
+        let resRepRaw = await fetch(`${GRIST_SERVER_URL}/api/docs/${GRIST_DOC_ID}/tables/Reponses/records`, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(reponsesPayload)
+        });
+
+        if (!resRepRaw.ok) {
+          resRepRaw = await fetch(`${GRIST_SERVER_URL}/api/docs/${GRIST_DOC_ID}/tables/R%C3%A9ponses/records`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(reponsesPayload)
+          });
+        }
+
+        if (!resRepRaw.ok) {
+          const errText = await resRepRaw.text();
+          throw new Error("Erreur Réponses : " + errText);
+        }
 
         document.getElementById('step-quiz').classList.add('hidden');
         document.getElementById('step-success').classList.remove('hidden');
+
       } catch (err) {
-        console.error("Erreur détaillée :", err);
-        showError("Erreur : " + (err.message || JSON.stringify(err)));
+        console.error("Erreur REST Grist :", err);
+        showError("Impossible d'enregistrer : " + err.message);
         btn.disabled = false;
         btn.innerText = 'Réessayer';
       }
