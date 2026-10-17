@@ -94,15 +94,11 @@
 
   <script>
     // =========================================================================
-    // CONFIGURATION DYNAMIQUE DU CLASSEUR
+    // CONFIGURATION DU RELAIS GOOGLE APPS SCRIPT
     // =========================================================================
     const urlParams = new URLSearchParams(window.location.search);
-    // Détecte le paramètre ?doc=... ou prend le classeur principal par défaut
     const GRIST_DOC_ID = urlParams.get('doc') || "bMbHaYK5mnfQ";
-    
-    // Renseignez votre clé API Grist ici :
-    const GRIST_API_KEY = "164e9d6280c5c9c37c894966c32dd8e80822ae64";
-    const GRIST_SERVER_URL = "https://docs.getgrist.com";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwk9Az9B0fHsgWCmxhWX7VciL0te90oMOXZ5IBwq92gzeKJFUOh6DosCIVh-W0A4LPP2g/exec";
 
     const ECHELLE = [
       "1 - Pas d'accord",
@@ -214,83 +210,42 @@
         currentIndex++;
         renderQuestion();
       } else {
-        await submitAllAnswersREST();
+        await submitAllAnswersRelay();
       }
     }
 
-    async function submitAllAnswersREST() {
+    async function submitAllAnswersRelay() {
       const btn = document.getElementById('next-btn');
       btn.disabled = true;
       btn.innerText = 'Envoi en cours...';
       document.getElementById('error-box').classList.add('hidden');
 
       try {
-        const headers = {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${GRIST_API_KEY}`
-        };
-
-        // 1. Création de l'utilisateur
-        const userPayload = {
-          records: [{
-            fields: {
-              Nom: managerInfos.Nom,
-              Fonction: managerInfos.Fonction,
-              Email: managerInfos.Email,
-              Date_Inscription: managerInfos.Date_Inscription
-            }
-          }]
-        };
-
-        const resUserRaw = await fetch(`${GRIST_SERVER_URL}/api/docs/${GRIST_DOC_ID}/tables/Utilisateurs/records`, {
-          method: 'POST',
-          headers: headers,
-          body: JSON.stringify(userPayload)
-        });
-
-        if (!resUserRaw.ok) {
-          const errText = await resUserRaw.text();
-          throw new Error("Erreur Utilisateur : " + errText);
-        }
-
-        const resUserData = await resUserRaw.json();
-        const newUserId = resUserData.records[0].id;
-
-        // 2. Création des 20 réponses
-        const reponsesPayload = {
-          records: QUESTIONS.map(q => ({
-            fields: {
-              Utilisateur_ID: newUserId,
-              Question_ID: q.id,
-              Note: userAnswers[q.id] || "1 - Pas d'accord"
-            }
+        const payload = {
+          docId: GRIST_DOC_ID,
+          user: managerInfos,
+          reponses: QUESTIONS.map(q => ({
+            id: q.id,
+            note: userAnswers[q.id] || "1 - Pas d'accord"
           }))
         };
 
-        let resRepRaw = await fetch(`${GRIST_SERVER_URL}/api/docs/${GRIST_DOC_ID}/tables/Reponses/records`, {
+        // Envoi via le relais Google Apps Script en text/plain pour neutraliser les restrictions CORS du navigateur
+        await fetch(GOOGLE_SCRIPT_URL, {
           method: 'POST',
-          headers: headers,
-          body: JSON.stringify(reponsesPayload)
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8'
+          },
+          body: JSON.stringify(payload)
         });
 
-        if (!resRepRaw.ok) {
-          resRepRaw = await fetch(`${GRIST_SERVER_URL}/api/docs/${GRIST_DOC_ID}/tables/R%C3%A9ponses/records`, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify(reponsesPayload)
-          });
-        }
-
-        if (!resRepRaw.ok) {
-          const errText = await resRepRaw.text();
-          throw new Error("Erreur Réponses : " + errText);
-        }
-
+        // Affichage immédiat de l'écran de confirmation
         document.getElementById('step-quiz').classList.add('hidden');
         document.getElementById('step-success').classList.remove('hidden');
 
       } catch (err) {
-        console.error("Erreur REST Grist :", err);
+        console.error("Erreur de transmission :", err);
         showError("Impossible d'enregistrer : " + err.message);
         btn.disabled = false;
         btn.innerText = 'Réessayer';
