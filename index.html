@@ -215,41 +215,59 @@
     }
 
 async function submitAllAnswersRelay() {
-      const btn = document.getElementById('next-btn');
-      btn.disabled = true;
-      btn.innerText = 'Envoi en cours...';
-      document.getElementById('error-box').classList.add('hidden');
+  const btn = document.getElementById('next-btn');
+  btn.disabled = true;
+  btn.innerText = 'Envoi en cours...';
+  document.getElementById('error-box').classList.add('hidden');
 
-      try {
-        const payload = {
-          docId: GRIST_DOC_ID,
-          user: managerInfos,
-          reponses: QUESTIONS.map(q => ({
-            id: q.id,
-            note: userAnswers[q.id] || "1 - Pas d'accord"
-          }))
-        };
+  try {
+    const payload = {
+      docId: GRIST_DOC_ID,
+      user: managerInfos,
+      reponses: QUESTIONS.map(q => ({
+        id: q.id,
+        note: userAnswers[q.id] || "1 - Pas d'accord"
+      }))
+    };
 
-        // Envoi avec mode no-cors pour autoriser le flux sans blocage de redirection
-        await fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: {
-            'Content-Type': 'text/plain;charset=utf-8'
-          },
-          body: JSON.stringify(payload)
-        });
-
-        document.getElementById('step-quiz').classList.add('hidden');
-        document.getElementById('step-success').classList.remove('hidden');
-
-      } catch (err) {
-        console.error("Erreur de transmission :", err);
-        showError("Impossible d'enregistrer : " + err.message);
-        btn.disabled = false;
-        btn.innerText = 'Réessayer';
-      }
+    // 1. Création d'un iframe invisible si inexistant pour intercepter la redirection Google
+    let hiddenIframe = document.getElementById('hidden-relay-iframe');
+    if (!hiddenIframe) {
+      hiddenIframe = document.createElement('iframe');
+      hiddenIframe.id = 'hidden-relay-iframe';
+      hiddenIframe.name = 'hidden-relay-iframe';
+      hiddenIframe.style.display = 'none';
+      document.body.appendChild(hiddenIframe);
     }
+
+    // 2. Création dynamique d'un formulaire HTML standard
+    // Les formulaires HTML gèrent nativement les redirections 302 de Google Apps Script sans vider les données
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = GOOGLE_SCRIPT_URL;
+    form.target = 'hidden-relay-iframe';
+
+    const inputData = document.createElement('input');
+    inputData.type = 'hidden';
+    inputData.name = 'data';
+    inputData.value = JSON.stringify(payload);
+    form.appendChild(inputData);
+
+    document.body.appendChild(form);
+    form.submit();
+    form.remove();
+
+    // 3. Affichage de la validation
+    document.getElementById('step-quiz').classList.add('hidden');
+    document.getElementById('step-success').classList.remove('hidden');
+
+  } catch (err) {
+    console.error("Erreur de transmission :", err);
+    showError("Impossible d'enregistrer : " + err.message);
+    btn.disabled = false;
+    btn.innerText = 'Réessayer';
+  }
+}
   </script>
 </body>
 </html>
