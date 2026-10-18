@@ -230,9 +230,10 @@ async function submitAllAnswersRelay() {
           }))
         };
 
-        // Envoi en chaîne brute avec text/plain pour contourner le blocage CORS
+        // Envoi avec mode no-cors pour autoriser le flux sans blocage de redirection
         await fetch(GOOGLE_SCRIPT_URL, {
           method: 'POST',
+          mode: 'no-cors',
           headers: {
             'Content-Type': 'text/plain;charset=utf-8'
           },
