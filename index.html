@@ -215,56 +215,44 @@
     }
 
 async function submitAllAnswersRelay() {
-      const btn = document.getElementById('next-btn');
-      btn.disabled = true;
-      btn.innerText = 'Envoi en cours...';
-      document.getElementById('error-box').classList.add('hidden');
+  const btn = document.getElementById('next-btn');
+  btn.disabled = true;
+  btn.innerText = 'Envoi en cours...';
+  document.getElementById('error-box').classList.add('hidden');
 
-      try {
-        const payload = {
-          docId: GRIST_DOC_ID,
-          user: managerInfos,
-          reponses: QUESTIONS.map(q => ({
-            id: q.id,
-            note: userAnswers[q.id] || "1 - Pas d'accord"
-          }))
-        };
+  try {
+    const payload = {
+      docId: GRIST_DOC_ID,
+      user: managerInfos,
+      reponses: QUESTIONS.map(q => ({
+        id: q.id,
+        note: userAnswers[q.id] || "1 - Pas d'accord"
+      }))
+    };
 
-        let hiddenIframe = document.getElementById('hidden-relay-iframe');
-        if (!hiddenIframe) {
-          hiddenIframe = document.createElement('iframe');
-          hiddenIframe.id = 'hidden-relay-iframe';
-          hiddenIframe.name = 'hidden-relay-iframe';
-          hiddenIframe.style.display = 'none';
-          document.body.appendChild(hiddenIframe);
-        }
+    const encodedData = encodeURIComponent(JSON.stringify(payload));
+    const targetUrl = `${GOOGLE_SCRIPT_URL}?data=${encodedData}`;
 
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = GOOGLE_SCRIPT_URL;
-        form.target = 'hidden-relay-iframe';
-        form.enctype = 'application/x-www-form-urlencoded';
+    // Transmission via une balise script dynamique (JSONP) : traverse tous les pare-feux et redirections
+    await new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = targetUrl;
+      script.onload = () => { script.remove(); resolve(); };
+      script.onerror = () => { script.remove(); resolve(); };
+      document.body.appendChild(script);
+      setTimeout(resolve, 1500); // Déblocage automatique après 1,5 s
+    });
 
-        const inputData = document.createElement('input');
-        inputData.type = 'hidden';
-        inputData.name = 'data';
-        inputData.value = JSON.stringify(payload);
-        form.appendChild(inputData);
+    document.getElementById('step-quiz').classList.add('hidden');
+    document.getElementById('step-success').classList.remove('hidden');
 
-        document.body.appendChild(form);
-        form.submit();
-        form.remove();
-
-        document.getElementById('step-quiz').classList.add('hidden');
-        document.getElementById('step-success').classList.remove('hidden');
-
-      } catch (err) {
-        console.error("Erreur de transmission :", err);
-        showError("Impossible d'enregistrer : " + err.message);
-        btn.disabled = false;
-        btn.innerText = 'Réessayer';
-      }
-    }
+  } catch (err) {
+    console.error("Erreur de transmission :", err);
+    showError("Impossible d'enregistrer : " + err.message);
+    btn.disabled = false;
+    btn.innerText = 'Réessayer';
+  }
+}
   </script>
 </body>
 </html>
