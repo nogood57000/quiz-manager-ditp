@@ -15,7 +15,7 @@
 
   <div class="w-full max-w-xl bg-white rounded-2xl shadow-xl border border-slate-200/80 p-5 sm:p-8 relative">
 
-    <!-- BADGE ENVIRONNEMENT (FORMATION VS TEST) -->
+    <!-- BANDEAU D'ENVIRONNEMENT -->
     <div id="env-badge-container" class="mb-4">
       <span id="env-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase">
         <span class="w-2 h-2 rounded-full" id="env-dot"></span>
@@ -27,9 +27,9 @@
     <div id="step-intro">
       <h1 class="text-xl sm:text-2xl font-bold text-slate-900 mb-2">Auto-évaluation Managériale</h1>
       <p class="text-xs sm:text-sm text-slate-600 mb-6 leading-relaxed">
-        Ce questionnaire explore vos pratiques managériales autour de 4 axes repères : 
+        Ce questionnaire explore vos pratiques professionnelles sur 4 dimensions : 
         <strong>Communication, Gestion d'équipe, Adaptation et Leadership</strong>.
-        Votre profil individuel apparaîtra instantanément à la fin du parcours.
+        Votre radar individuel apparaîtra instantanément à l'issue des 20 questions.
       </p>
 
       <div class="space-y-4">
@@ -48,13 +48,13 @@
 
         <div class="pt-2">
           <button type="button" onclick="demarrerQuiz()" class="w-full py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 active:scale-[0.99] transition shadow-sm cursor-pointer text-sm sm:text-base">
-            Commencer l'évaluation →
+            Commencer le questionnaire →
           </button>
         </div>
       </div>
     </div>
 
-    <!-- ÉCRAN 2 : QUESTIONNAIRE FLUIDE -->
+    <!-- ÉCRAN 2 : QUESTIONNAIRE -->
     <div id="step-quiz" class="hidden">
       <div class="mb-5">
         <div class="flex justify-between items-center text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
@@ -82,45 +82,6 @@
       </div>
     </div>
 
-    <!-- ÉCRAN 3 : RESTITUTION INDIVIDUELLE AVEC RADAR -->
+    <!-- ÉCRAN 3 : RESTITUTION & TRANSMISSION SANS CLÉ API -->
     <div id="step-success" class="hidden text-center py-2">
-      <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 text-xl font-bold">✓</div>
-      <h2 class="text-lg sm:text-xl font-bold text-slate-900 mb-1">Votre Profil Managériel</h2>
-      <p id="restitution-user" class="text-xs text-slate-500 mb-4"></p>
-
-      <!-- Graphique Radar individuel -->
-      <div class="relative w-full max-w-[340px] aspect-square mx-auto mb-5">
-        <canvas id="userRadarChart"></canvas>
-      </div>
-
-      <!-- Récapitulatif des 4 scores -->
-      <div class="grid grid-cols-2 gap-2 text-left mb-5">
-        <div class="p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl">
-          <span class="block text-[11px] font-semibold text-slate-500 uppercase">Communication</span>
-          <span id="score-comm" class="text-base font-bold text-indigo-700">0.0 / 4</span>
-        </div>
-        <div class="p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl">
-          <span class="block text-[11px] font-semibold text-slate-500 uppercase">Gestion d'équipe</span>
-          <span id="score-equipe" class="text-base font-bold text-indigo-700">0.0 / 4</span>
-        </div>
-        <div class="p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl">
-          <span class="block text-[11px] font-semibold text-slate-500 uppercase">Adaptation</span>
-          <span id="score-adapt" class="text-base font-bold text-indigo-700">0.0 / 4</span>
-        </div>
-        <div class="p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl">
-          <span class="block text-[11px] font-semibold text-slate-500 uppercase">Leadership</span>
-          <span id="score-lead" class="text-base font-bold text-indigo-700">0.0 / 4</span>
-        </div>
-      </div>
-
-      <!-- Action de partage manuel sans API -->
-      <div class="pt-2 border-t border-slate-100 flex flex-col gap-2">
-        <button type="button" onclick="copierSynthese()" id="btn-copy" class="w-full py-2.5 px-4 bg-slate-900 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-800 transition shadow-sm cursor-pointer">
-          📋 Copier mes scores pour l'atelier
-        </button>
-        <span id="copy-confirm" class="text-[11px] text-emerald-600 font-medium hidden">Copié dans le presse-papier !</span>
-      </div>
-    </div>
-
-    <!-- ZONE D'ERREUR -->
-    <div id="error-box" class="hidden mt-4 p-3 bg-rose-50 border border-rose-200 text-rose-700
+      <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-
